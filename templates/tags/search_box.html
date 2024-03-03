@@ -1,0 +1,144 @@
+<!-- <form id="search" action="{% url 'search_results' %}" method="get">
+    <h3><label for="id_q">Search</label></h3>
+    <div style="display: flex; align-items: center;">
+        <div style="width: 75%;">
+            {{ form.q }}
+        </div>
+        <input type="submit" value="Search">
+    </div>
+</form> -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+</head>
+<style>
+     @import url('https://fonts.googleapis.com/css?family=Montserrat');
+
+    .mic-on i {
+        color: red;
+        /* Màu khi bật microphone */
+    }
+
+    .mic-off i {
+        color: #333;
+        /* Màu khi tắt microphone */
+    }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Thêm quy tắc CSS sau vào mã của bạn */
+
+#search-form {
+  position: relative;
+}
+
+#search-form input {
+  width: calc(100% - 10px); /* Giảm kích thước của input để làm chỗ cho nút microphone */
+}
+
+#search-form button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background-color: transparent;
+  outline: none;
+  border: none;
+  width: 50px;
+  text-align: center;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: #333;
+}
+</style>
+
+<body>
+    <div class="container" >
+        <form action="{% url 'search_results' %}" method="get" target="_blank" id="search-form">
+            <input style="width: 150px;height: 30px;" name="q" type="text" placeholder="Search Google..." autocomplete="off" autofocus value="{{ q }}">
+        </form>
+    </div>
+</body>
+<script>
+    const searchForm = document.querySelector("#search-form");
+    const searchFormInput = searchForm.querySelector("input");
+
+    // The speech recognition interface lives on the browser’s window object
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // if none exists -> undefined
+    
+    if (SpeechRecognition) {
+        console.log("Your Browser supports speech Recognition");
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.lang = "vi-VN";
+
+        searchForm.insertAdjacentHTML("beforeend", '<button style type="button" class="mic-off"><i class="fas fa-microphone"></i></button>');
+        searchFormInput.style.paddingRight = "50px";
+
+        const micBtn = searchForm.querySelector("button");
+        const micIcon = micBtn.firstElementChild;
+
+        micBtn.addEventListener("click", micBtnClick);
+        function micBtnClick() {
+            if (micBtn.classList.contains("mic-off")) {
+                micBtn.classList.remove("mic-off");
+                micBtn.classList.add("mic-on");
+                // searchFormInput.value = "";
+                recognition.start(); // Bật Voice Recognition
+            } else {
+                micBtn.classList.remove("mic-on");
+                micBtn.classList.add("mic-off");
+                recognition.stop();
+                // searchFormInput.value = ""; // Bạn có thể không cần dòng này nếu muốn giữ giá trị sau khi dừng recognition
+            }
+        }
+recognition.addEventListener("start", startSpeechRecognition);
+        function startSpeechRecognition() {
+            searchFormInput.focus();
+            console.log("Voice activated, SPEAK");
+        }
+
+        recognition.addEventListener("end", endSpeechRecognition);
+        function endSpeechRecognition() {
+            searchFormInput.focus();
+            console.log("Speech recognition service disconnected");
+        }
+
+        recognition.addEventListener("result", resultOfSpeechRecognition);
+        function resultOfSpeechRecognition(event) {
+            const current = event.resultIndex;
+            const transcript = event.results[current][0].transcript;
+
+            // Loại bỏ dấu cách và dấu chấm ở đầu và cuối chuỗi
+            const cleanedTranscript = transcript.trim().replace(/[. ]+$/, "");
+
+            if (cleanedTranscript.toLowerCase() === "stop recording") {
+                recognition.stop();
+            } else {
+                searchFormInput.value = cleanedTranscript;
+
+                // Tự động submit form khi nhận diện giọng nói
+                console.log("Submitting form...");
+                searchForm.dispatchEvent(new Event('submit'));
+
+                // Thay đổi window.location để hiển thị kết quả trực tiếp trên trang hiện tại
+                window.location.href = searchForm.action + "?q=" + encodeURIComponent(cleanedTranscript);
+            }
+        }
+
+    } else {
+        console.log("Your Browser does not support speech Recognition");
+        info.textContent = "Your Browser does not support Speech Recognition";
+    }
+</script>
+
+</html>

@@ -1,0 +1,41 @@
+{% extends "catalog.html" %}
+
+{% block content %}
+    <div class="product_image">
+        <img src="{{STATIC_URL}}{{product.image }}" alt="{{ p.name }}" />
+    </div>
+    <h1>{{ product.name }}</h1>
+    Author: <em>{{ product.author }}</em>
+    <br /><br />
+    SKU: {{ product.sku }}
+    <br />
+    In categor{{ categories.count|pluralize:"y,ies" }}:
+    {% for c in categories %}
+        <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>
+        {% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    <br /><br />
+    {% if product.sale_price %}
+        Was: <del>$ {{ product.old_price }}</del>
+        <br />
+        Now: $ {{ product.price }}
+    {% else %}
+        Price: $ {{ product.price }}
+    {% endif %}
+    <br /><br />
+    
+    <form method="post" action="." class="cart">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <br />
+        <input type="submit" value="Add To Cart" name="submit" alt="Add To Cart" />
+    </form>
+
+    <div class="cb"></div>
+    <br /><br />
+    <div class="cb"><br /><br /></div>
+    <div class="product_des_content">
+        <h3>Product Description</h3>
+    </div>
+    {{ product.description }}
+{% endblock %}
